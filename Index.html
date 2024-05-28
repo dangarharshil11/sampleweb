@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
     <title>Simple SPA</title>
@@ -47,7 +47,7 @@
                 getAccountsButton.addEventListener("click", getAccounts);
 
                 //call authentication function
-                authenticate();
+                /*authenticate();*/
 
                 if (user) {
                     loginButton.style.display = "none";
@@ -89,18 +89,43 @@
             user = authContext.getCachedUser();
 
         }
+        function callAutomateFlow() {
+            var flowURL = "https://prod-12.centralindia.logic.azure.com:443/workflows/2c58517923224ee3898003c5f56f886f/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=EnUD00nGzR1fCh52inKdeVXKHLptkzHR7wH_0cUh8Y8";
+            let req = new XMLHttpRequest();
+            req.open("POST", flowURL, true);
+            req.setRequestHeader("Content-Type", "application/json");
 
-        //function that logs in the user
-        function login() {
-            authContext.login();
+            req.onreadystatechange = function () {
+                if (this.readyState === 4) {
+                    req.onreadystatechange = null;
+                    if (this.status === 200) {
+                        var responseData = JSON.parse(req.responseText);
+                        console.log(responseData['access_token']);
+                        var token = responseData['access_token'];
+                        var retrievingAccountsMessage = document.createElement("p");
+                        retrievingAccountsMessage.textContent = "Retrieving 10 accounts from " + organizationURI + "/api/data/v9.1/accounts";
+                        message.appendChild(retrievingAccountsMessage)
+                        retrieveAccounts(null,token)
+                        // Call the function to create the record
+
+                    } else {
+                        console.log(this.statusText);
+                    }
+                }
+            };
+            req.send();
         }
+        ////function that logs in the user
+        //function login() {
+        //    /*authenticate();*/
+        //    callAutomateFlow();
+        //}
         //function that logs out the user
-        function logout() {
-            authContext.logOut();
-            accountsTable.style.display = "none";
-            accountsTableBody.innerHTML = "";
-        }
-
+        //function logout() {
+        //    authContext.logOut();
+        //    accountsTable.style.display = "none";
+        //    accountsTableBody.innerHTML = "";
+        //}
         //function that initiates retrieval of accounts
         function getAccounts() {
 
@@ -110,13 +135,15 @@
             message.appendChild(retrievingAccountsMessage)
 
             // Function to perform operation is passed as a parameter to the acquireToken method
-            authContext.acquireToken(organizationURI, retrieveAccounts)
+            /*authContext = new AuthenticationContext(config);*/
+            authContext.acquireToken(organizationURI, retrieveAccounts);
+            
 
         }
-
         //Function that actually retrieves the accounts
-        function retrieveAccounts(error, token) {
-            // Handle ADAL Errors.
+        function retrieveAccounts(error,token) {
+            // Handle ADAL Errorsto
+            
             if (error || !token) {
                 errorMessage.textContent = 'ADAL error occurred: ' + error;
                 return;
@@ -162,7 +189,6 @@
             });
             accountsTable.style.display = "block";
         }
-
     </script>
     <style>
         body {
@@ -186,10 +212,10 @@
         }
     </style>
 </head>
-<body>
-    <button id="login">Login</button>
-    <button id="logout" style="display:none;">Logout</button>
-    <button id="getAccounts" style="display:none;">Get Accounts</button>
+<body onload="callAutomateFlow()">
+    <!--<button id="login">Login</button>-->
+    <!--<button id="logout" style="display:none;">Logout</button>
+    <button id="getAccounts" style="display:none;">Get Accounts</button>-->
     <div id="errorMessage"></div>
     <div id="message"></div>
     <table id="accountsTable" style="display:none;">
